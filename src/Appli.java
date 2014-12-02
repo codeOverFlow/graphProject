@@ -55,17 +55,13 @@ class Appli {
 			// process all line
 			while ((seq = br.readLine()) != null) {
 				System.out.println(seq);
-				// build the Bruijn graph
-				build_graph(k, seq);
-				// look for circuits in the graph
-				find_circuits(k);
-				System.out.println("save_circuits = " + save_circuits);
-				// look for tandem repeats
-				ArrayList<ArrayList<Object>> tandem = search_tandem(k, seq);
-				System.out.println("Tandem = " + tandem);
-				// look for non trivial repeats
-				ArrayList<String> non_trivial = find_non_trivial(k, seq);
-				System.out.println("non_trivial = " + non_trivial + "\n\n");
+				for (int i = 1; i < seq.length() / 2; i++) {
+					k = i;
+					build_graph(k, seq);
+					find_circuits(k);
+					search_tandem(k, seq);
+					find_non_trivial(k, seq);
+				}
 			}
 			br.close();
 		} catch (Exception e) {
@@ -104,7 +100,7 @@ class Appli {
 			}
 		}
 		// save the graph in a file
-		save_graph(S);
+		save_graph(S, k);
 	}
 
 	/**
@@ -216,11 +212,11 @@ class Appli {
 	 *
 	 * @param S the string used to built the graph (used to name the files)
 	 */
-	private static void save_graph(String S) {
+	private static void save_graph(String S, int k) {
 		// create a new file in dot/
 		PrintWriter pw = null;
 		try {
-			pw = new PrintWriter(new BufferedWriter(new FileWriter("./dot/" + S)));
+			pw = new PrintWriter(new BufferedWriter(new FileWriter("./dot/" + S + "_" + k)));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -241,9 +237,9 @@ class Appli {
 
 		// create the svg file from the dot file
 		try {
-			Process p = Runtime.getRuntime().exec("dot -O -Tsvg ./dot/" + S);
+			Process p = Runtime.getRuntime().exec("dot -O -Tsvg ./dot/" + S + "_" + k);
 			p.waitFor();
-			p = Runtime.getRuntime().exec("mv ./dot/" + S + ".svg ./svg");
+			p = Runtime.getRuntime().exec("mv ./dot/" + S + "_" + k + ".svg ./svg");
 			p.waitFor();
 		} catch (IOException | InterruptedException e) {
 			e.printStackTrace();
@@ -256,20 +252,38 @@ class Appli {
 	 * @param S          the string used to find tandem repeats (used to name the file)
 	 * @param arrayLists matrix containing information on each tandem repeats
 	 */
-	private static void save_tandem(String S, ArrayList<ArrayList<Object>> arrayLists) {
+	private static void save_tandem(String S, ArrayList<ArrayList<Object>> arrayLists, int k) {
 		// create a new file in tandem/
 		PrintWriter pw = null;
 		try {
-			pw = new PrintWriter(new BufferedWriter(new FileWriter("./tandem/" + S)));
+			pw = new PrintWriter(new BufferedWriter(new FileWriter("./tandem/" + S, true)));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 
 		assert pw != null;
 		// print all tandem repeats in the file
-		pw.print("****************** REPETITION EN TANDEM ********************\n");
+		pw.print("****************** REPETITION EN TANDEM DE TAILLE " + k + " ********************\n");
 		for (ArrayList<Object> a : arrayLists) {
 			pw.println(a.get(0) + ": {debut: " + a.get(1) + ", fin: " + a.get(2) + "}\n");
+		}
+		pw.close();
+	}
+
+	private static void save_non_trivial(String S, ArrayList<String> arrayLists, int k) {
+		// create a new file in tandem/
+		PrintWriter pw = null;
+		try {
+			pw = new PrintWriter(new BufferedWriter(new FileWriter("./nonTrivial/" + S, true)));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		assert pw != null;
+		// print all tandem repeats in the file
+		pw.print("****************** REPETITION NON TRIVIAL DE TAILLE " + k + " ********************\n");
+		for (String a : arrayLists) {
+			pw.println(a + "\n");
 		}
 		pw.close();
 	}
@@ -318,7 +332,8 @@ class Appli {
 				tandem.add(tab);
 			}
 		}
-		save_tandem(seq + "txt", tandem);
+		if (tandem.size() > 0)
+			save_tandem(seq + ".txt", tandem, k);
 		return tandem;
 	}
 
@@ -393,6 +408,8 @@ class Appli {
 				}
 			}
 		}
+		if (non_trivial.size() > 0)
+			save_non_trivial(seq + ".txt", non_trivial, k);
 		// return the ArrayList containing all non trivial repeats
 		return non_trivial;
 	}
