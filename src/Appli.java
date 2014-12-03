@@ -55,12 +55,11 @@ class Appli {
 			// process all line
 			while ((seq = br.readLine()) != null) {
 				System.out.println(seq);
-				for (int i = 1; i < seq.length() / 2; i++) {
-					k = i;
-					build_graph(k, seq);
-					find_circuits(k);
-					search_tandem(k, seq);
-					find_non_trivial(k, seq);
+				for (int i = 1; i <= (seq.length() / 2) + 1; i++) {
+					build_graph(i, k, seq);
+					find_circuits(i);
+					search_tandem(i, seq);
+					find_non_trivial(i, seq);
 				}
 			}
 			br.close();
@@ -75,7 +74,7 @@ class Appli {
 	 * @param k size of k-mer
 	 * @param S the string to analyze
 	 */
-	private static void build_graph(int k, String S) {
+	private static void build_graph(int k, int kk, String S) {
 		// variables
 		graph = new TreeMap<>();
 		save_circuits = new ArrayList<>();
@@ -100,7 +99,9 @@ class Appli {
 			}
 		}
 		// save the graph in a file
-		save_graph(S, k);
+		if (k == kk) {
+			save_graph(S.substring(0, S.length() / 4), k);
+		}
 	}
 
 	/**
@@ -333,7 +334,7 @@ class Appli {
 			}
 		}
 		if (tandem.size() > 0)
-			save_tandem(seq + ".txt", tandem, k);
+			save_tandem(seq.substring(0, seq.length() / 4) + ".txt", tandem, k);
 		return tandem;
 	}
 
@@ -409,7 +410,7 @@ class Appli {
 			}
 		}
 		if (non_trivial.size() > 0)
-			save_non_trivial(seq + ".txt", non_trivial, k);
+			save_non_trivial(seq.substring(0, seq.length() / 4) + ".txt", non_trivial, k);
 		// return the ArrayList containing all non trivial repeats
 		return non_trivial;
 	}
